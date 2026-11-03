@@ -199,7 +199,7 @@ def analyze_interview_with_llm(history, resume_data, warnings):
         "key_strengths": ["Strength 1", "Strength 2"],
         "areas_for_improvement": ["Weakness 1", "Weakness 2"],
         "recommendation": {{
-            "decision": "Selected / Not Selected / On Hold / Disqualified / Interview Incomplete",
+            "decision": "Use 'Your Interview is completed, we will inform you later through email about your selection' if candidate should be hired. Otherwise use one of: Not Selected / On Hold / Disqualified / Interview Incomplete",
             "score": "X/100",
             "justification": "Comprehensive reasoning. Be honest but fair. If Not Assessed, score low."
         }},

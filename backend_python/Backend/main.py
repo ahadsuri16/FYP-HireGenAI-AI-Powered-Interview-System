@@ -53,14 +53,19 @@ async def upload_resume(
 
         # 🚀 AUTOMATICALLY START SESSION ON UPLOAD
         print("⚙️ Processing resume & creating session...")
+        print(f"DEBUG: About to call parse_resume for user_id={user_id}")
         resume_data = parse_resume(user_id)
+        print(f"DEBUG: parse_resume completed. Type: {type(resume_data)}")
         
         # Use RAW TEXT for interview context (Rich Detail)
         resume_text = resume_data.get("raw_text", str(resume_data))
         print(f"📄 Resume Text Extracted: {len(resume_text)} chars")
         
         # Pass FULL resume_data (dict) to preserve Name/Email
+        print(f"DEBUG: About to call create_session")
         session_id, first_question = create_session(user_id, resume_data)
+        print(f"DEBUG: create_session returned session_id={session_id}")
+        print(f"DEBUG: First question: {first_question[:100] if first_question else 'NONE'}...")
 
         print(f"✅ Session created: {session_id}")
 
@@ -145,6 +150,35 @@ def submit_live(req: AnswerReq):
         "question": next_question
     }
 
+
+
+
+# ===== REPORT ENDPOINTS =====
+from fastapi.responses import FileResponse
+from Backend.routers.interview import REPORT_STATUS
+
+@app.get("/report_status/{session_id}")
+async def get_report_status(session_id: str):
+    """Check if report is ready for a session"""
+    if session_id in REPORT_STATUS:
+        report_data = REPORT_STATUS[session_id]
+        return {"status": "ready", "reports": report_data}
+    return {"status": "pending"}
+
+@app.get("/download_report/{filename}")
+async def download_report(filename: str):
+    """Download generated PDF report"""
+    import os
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    report_path = os.path.join(base_dir, "reports", filename)
+    
+    if os.path.exists(report_path):
+        return FileResponse(
+            report_path,
+            media_type="application/pdf",
+            filename=filename
+        )
+    return {"error": "Report not found"}
 
 # Health Check Endpoint
 @app.get("/")

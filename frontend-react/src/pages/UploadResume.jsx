@@ -25,7 +25,7 @@ export default function UploadResume() {
 
       setProgress(15);
 
-      const res = await fetch("http://20.98.82.167/upload-resume", {
+      const res = await fetch("https://20.98.82.167/upload-resume", {
         method: "POST",
         body: formData,
       });

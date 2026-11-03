@@ -94,7 +94,7 @@ Detect any AI text or vioce (Chatgpt, Gemini, voice versions etc.) patterns and 
        - NEVER ask multiple questions at once.
 
     2. **STRICT MISBEHAVIOR HANDLING**:
-       - If the candidate shows: Mocking, Role Confusion (thinking they are the interviewer), Fake Identity, AI PLAGIARISM, Intentional Derailment, or Refusal to answer seriously.
+       - If the candidate shows: Mocking, AI PLAGIARISM, Intentional Derailment, or Refusal to answer seriously.
        - ACTION: STOP IMMEDIATELY.
        - OUTPUT ONLY: `[TERMINATE]`
        - DO NOT give warnings. DO NOT argue. Just terminate.
@@ -219,7 +219,14 @@ def create_session(user_id: str, resume_data):
 
     # Generate First Question (Greeting)
     # Empty history for start
-    first_question = ask_llm(resume_text, [])
+    try:
+        first_question = ask_llm(resume_text, [])
+        print(f"✅ First Question Generated: {first_question[:100]}...")
+    except Exception as e:
+        print(f"❌ LLM API Failed: {e}")
+        print("⚠️ Using fallback greeting")
+        # Fallback greeting if API fails
+        first_question = "Hello! Welcome to your HireGen AI interview. I'm excited to learn more about your background and skills today. Let's begin - could you start by telling me a bit about yourself and your professional experience?"
     
     # Add to internal messages so AI knows it asked
     # Add timestamp
@@ -232,6 +239,7 @@ def create_session(user_id: str, resume_data):
         "timestamp": ts
     })
     
+    print(f"✅ Session Created: {session_id}")
     return session_id, first_question
 
 def submit_answer(session_id: str, answer: str):

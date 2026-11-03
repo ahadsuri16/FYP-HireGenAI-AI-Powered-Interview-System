@@ -3,8 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { useAuth } from "../AuthProvider";
 import { supabase } from "../lib/supabase";
+import { API_BASE_URL, WS_BASE_URL } from "../config";
 
-const WS_URL = "ws://20.98.82.167/ws/interview";
+const WS_URL = `${WS_BASE_URL}/ws/interview`;
 
 export default function Interview({
   onFinish = () => { },
@@ -46,7 +47,7 @@ export default function Interview({
     if (isGeneratingReport && sessionId) {
       interval = setInterval(async () => {
         try {
-          const res = await fetch(`http://20.98.82.167/report_status/${sessionId}`);
+          const res = await fetch(`https://20.98.82.167/report_status/${sessionId}`);
           const data = await res.json();
           if (data.status === "ready") {
             console.log("✅ Report Ready:", data.filename);
@@ -447,7 +448,24 @@ export default function Interview({
       }
     };
 
-    ws.onclose = () => console.log("WS Closed");
+
+    ws.onclose = () => {
+      console.log("WS Closed");
+
+      // If interview was active, treat as interview end
+      if (inInterview) {
+        console.log("🏁 WebSocket closed - Interview ended");
+        stopLocalMedia();
+        setInInterview(false);
+        exitSecureMode();
+        setIsGeneratingReport(true); // Start polling for report
+
+        // Wait a moment for report to generate, then go to dashboard
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 3000);
+      }
+    };
   }
 
   function playBeep() {
@@ -653,7 +671,7 @@ export default function Interview({
       // 🔄 RESET SESSION FOR FRESH START
       console.log("🔄 Resetting session...", sessionId);
       try {
-        await fetch(`http://20.98.82.167/reset-session/${sessionId}`, { method: "POST" });
+        await fetch(`https://20.98.82.167/reset-session/${sessionId}`, { method: "POST" });
       } catch (e) {
         console.error("Session reset failed", e);
       }
@@ -814,7 +832,7 @@ export default function Interview({
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a
-                  href={`http://20.98.82.167/download_report_file/${reportPath}`}
+                  href={`https://20.98.82.167/download_report_file/${reportPath}`}
                   download
                   target="_blank"
                   className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-500 transition shadow-lg shadow-indigo-500/25 flex items-center gap-2"

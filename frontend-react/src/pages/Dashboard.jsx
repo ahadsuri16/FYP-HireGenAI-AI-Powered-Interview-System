@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthProvider";
 import { supabase } from "../lib/supabase";
 import { addNotificationOnce } from "../components/notifications";
+import { API_BASE_URL } from "../config";
 
 export default function Dashboard() {
   const [userName, setUserName] = useState("");
@@ -57,7 +58,7 @@ export default function Dashboard() {
 
       console.log("Sending resume to backend...");
 
-      const res = await fetch("http://20.98.82.167/upload-resume", {
+      const res = await fetch(`${API_BASE_URL}/upload-resume`, {
         method: "POST",
         body: formData,
       });
@@ -110,16 +111,24 @@ export default function Dashboard() {
     if (sessionId) {
       const checkReportStatus = async () => {
         try {
-          const res = await fetch(`http://20.98.82.167/report_status/${sessionId}`);
+          const res = await fetch(`${API_BASE_URL}/report_status/${sessionId}`);
           const data = await res.json();
-          if (data.status === "ready") {
+          console.log("📊 Report Status Response:", data); // DEBUG
+
+          // 🛡️ ROBUST CHECK: Support both old and new backend formats
+          const reportsObj = data.reports || (data.evaluation ? data : null);
+
+          if (data.status === "ready" && reportsObj) {
+            console.log("✅ Reports detected! Setting state...", reportsObj); // DEBUG
             setReportStatus("ready");
             setReportFiles({
-              evaluation: data.evaluation || data.filename, // Handle both old/new format
-              transcript: data.transcript
+              evaluation: reportsObj.evaluation || reportsObj.filename,
+              transcript: reportsObj.transcript
             });
             clearInterval(interval);
             addNotificationOnce("Your feedback report is ready!");
+          } else {
+            console.log("⏳ Report not ready yet. Status:", data.status); // DEBUG
           }
         } catch (e) {
           console.error("Polling error", e);
@@ -241,7 +250,7 @@ export default function Dashboard() {
             {hasResume && (
               <div className="mb-4 text-center">
                 <a
-                  href={`http://20.98.82.167/download-resume/${user?.id}`}
+                  href={`${API_BASE_URL}/download-resume/${user?.id}`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-lg text-sm font-semibold hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors border border-indigo-200 dark:border-indigo-800"
@@ -472,7 +481,7 @@ export default function Dashboard() {
               <div className="space-y-4">
                 {reportFiles.evaluation && (
                   <a
-                    href={`http://20.98.82.167/download_report_file/${reportFiles.evaluation}`}
+                    href={`${API_BASE_URL}/download_report/${reportFiles.evaluation}`}
                     download
                     className="flex items-center justify-between px-6 py-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 hover:shadow-md transition group"
                   >
@@ -491,7 +500,7 @@ export default function Dashboard() {
 
                 {reportFiles.transcript && (
                   <a
-                    href={`http://20.98.82.167/download_report_file/${reportFiles.transcript}`}
+                    href={`${API_BASE_URL}/download_report/${reportFiles.transcript}`}
                     download
                     className="flex items-center justify-between px-6 py-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 hover:shadow-md transition group"
                   >

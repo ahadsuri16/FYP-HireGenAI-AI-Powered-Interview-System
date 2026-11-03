@@ -63,7 +63,7 @@ export default function Header() {
           <div className="flex items-center gap-3">
             <Link to="/dashboard" className="flex items-center gap-3">
               <div className="flex-shrink-0 flex items-center justify-center">
-                <img src="/logo.png" alt="HireGen-AI Logo" className="h-10 w-auto object-contain" />
+                <img src="/logo.png" alt="HireGen-AI Logo" className="h-16 w-auto object-contain" />
               </div>
               <div className="hidden md:block">
                 <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none">HireGen-AI</h1>
